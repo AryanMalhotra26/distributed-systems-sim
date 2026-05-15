@@ -50,19 +50,11 @@ class BullyElectionTest {
 
     private static void waitUntil(Duration timeout, CheckedCondition condition) {
         long deadline = System.nanoTime() + timeout.toNanos();
-        AssertionError lastError = null;
         while (System.nanoTime() < deadline) {
-            try {
-                if (condition.evaluate()) {
-                    return;
-                }
-            } catch (AssertionError error) {
-                lastError = error;
+            if (condition.evaluate()) {
+                return;
             }
             sleep(20);
-        }
-        if (lastError != null) {
-            throw lastError;
         }
         throw new AssertionError("Condition not satisfied within " + timeout);
     }
