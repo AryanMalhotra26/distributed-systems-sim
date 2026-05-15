@@ -25,24 +25,28 @@ class PaxosTest {
 
     @Test
     void concurrentProposalsConvergeOnSingleValue() throws Exception {
-        try (ConsensusCluster cluster = new ConsensusCluster(5);
-             var executor = Executors.newFixedThreadPool(2)) {
-            CompletableFuture<String> first = CompletableFuture.supplyAsync(
-                    () -> cluster.proposeValue(1, "alpha", Duration.ofSeconds(2)),
-                    executor
-            );
-            CompletableFuture<String> second = CompletableFuture.supplyAsync(
-                    () -> cluster.proposeValue(2, "beta", Duration.ofSeconds(2)),
-                    executor
-            );
+        try (ConsensusCluster cluster = new ConsensusCluster(5)) {
+            var executor = Executors.newFixedThreadPool(2);
+            try {
+                CompletableFuture<String> first = CompletableFuture.supplyAsync(
+                        () -> cluster.proposeValue(1, "alpha", Duration.ofSeconds(2)),
+                        executor
+                );
+                CompletableFuture<String> second = CompletableFuture.supplyAsync(
+                        () -> cluster.proposeValue(2, "beta", Duration.ofSeconds(2)),
+                        executor
+                );
 
-            String firstResult = first.get(3, TimeUnit.SECONDS);
-            String secondResult = second.get(3, TimeUnit.SECONDS);
-            Set<String> allowedValues = Set.of("alpha", "beta");
+                String firstResult = first.get(3, TimeUnit.SECONDS);
+                String secondResult = second.get(3, TimeUnit.SECONDS);
+                Set<String> allowedValues = Set.of("alpha", "beta");
 
-            assertEquals(firstResult, secondResult);
-            assertTrue(allowedValues.contains(firstResult));
-            cluster.getNodes().forEach(node -> assertEquals(firstResult, node.getCommittedValue()));
+                assertEquals(firstResult, secondResult);
+                assertTrue(allowedValues.contains(firstResult));
+                cluster.getNodes().forEach(node -> assertEquals(firstResult, node.getCommittedValue()));
+            } finally {
+                executor.shutdownNow();
+            }
         }
     }
 
