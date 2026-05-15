@@ -70,7 +70,7 @@ public abstract class Node implements Runnable {
                     handleMessage(message);
                 }
             }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException interruptedException) {
             Thread.currentThread().interrupt();
         } finally {
             running.set(false);
